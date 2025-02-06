@@ -1,20 +1,35 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import OnboardingScreen from './Screens/onboarding-screen.js';
+import DeliveryScreen from './Screens/delivery-onboarding.js';
+import OrderingScreen from './Screens/food-ordering-flow.js';
+import AuthScreen from './Screens/auth-screen.js';
+import SignupScreen from './Screens/signup-screen.js';
+import PhoneVerificationScreen from './Screens/phone-verification-screen.js';
+import ProfileSetupScreen from './Screens/phone-verification-screen.js';
 
-export default function App() {
+const Stack = createStackNavigator();
+
+const App = () => {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <NavigationContainer>
+      <Stack.Navigator 
+        initialRouteName="Onboarding"
+        screenOptions={{
+          headerShown: false
+        }}
+      >
+        <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+        <Stack.Screen name="Delivery" component={DeliveryScreen} />
+        <Stack.Screen name="Ordering" component={OrderingScreen} />
+        <Stack.Screen name="Auth" component={AuthScreen} />
+        <Stack.Screen name="signup" component={SignupScreen} />
+        <Stack.Screen name="PhoneVerification" component={PhoneVerificationScreen} />
+        <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default App;
