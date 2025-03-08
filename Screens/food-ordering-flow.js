@@ -31,7 +31,7 @@ const OrderingScreen = ({ navigation }) => {
         <View style={styles.buttonContainer}>
           <TouchableOpacity 
             style={styles.skipButton}
-            onPress={() => navigation.navigate('Home')}
+            onPress={() => navigation.navigate('Auth')}
           >
             <Text style={styles.skipText}>Skip</Text>
           </TouchableOpacity>

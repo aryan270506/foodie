@@ -1,101 +1,147 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, ActivityIndicator } from 'react-native';
 
 const SignupScreen = ({ navigation }) => {
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState({
+    fullName: '',
+    phoneNumber: '',
+    password: ''
+  });
+
+  const validateForm = () => {
+    let isValid = true;
+    const newErrors = {
+      fullName: '',
+      phoneNumber: '',
+      password: ''
+    };
+
+    if (!fullName.trim()) {
+      newErrors.fullName = 'Full name is required';
+      isValid = false;
+    }
+
+    if (!phoneNumber.trim()) {
+      newErrors.phoneNumber = 'Phone number is required';
+      isValid = false;
+    } else if (!/^\d{10}$/.test(phoneNumber.replace(/[^0-9]/g, ''))) {
+      newErrors.phoneNumber = 'Please enter a valid 10-digit phone number';
+      isValid = false;
+    }
+
+    if (!password) {
+      newErrors.password = 'Password is required';
+      isValid = false;
+    } else if (password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
 
   const handleSignUp = () => {
-    if (fullName && phoneNumber && password) {
-      navigation.navigate('PhoneVerification', { 
-        fullName, 
-        phoneNumber 
-      });
-    } else {
-      alert('Please fill in all fields');
+    if (validateForm()) {
+      setIsLoading(true);
+      
+      // In a real app, this would check if the phone number already exists in your database
+      setTimeout(() => {
+        setIsLoading(false);
+        navigation.navigate('PhoneVerification', { 
+          fullName, 
+          phoneNumber: formatPhoneNumber(phoneNumber)
+        });
+      }, 1000); // Simulate network delay
     }
+  };
+
+  // Format phone number for display (e.g., (123) 456-7890)
+  const formatPhoneNumber = (phoneNumber) => {
+    const cleaned = phoneNumber.replace(/\D/g, '');
+    if (cleaned.length === 10) {
+      return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`;
+    }
+    return phoneNumber;
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <View style={styles.tabContainer}>
-            <TouchableOpacity 
-              style={styles.tab}
-              onPress={() => navigation.navigate('Auth')}
-            >
-              <Text style={styles.tabText}>Login</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.activeTab}>
-              <Text style={styles.activeTabText}>Sign Up</Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.title}>Welcome!</Text>
-          <Text style={styles.subtitle}>Create your account</Text>
-        </View>
-
-        <View style={styles.form}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Full Name</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your Full Name"
-              placeholderTextColor="#A0A0A0"
-              value={fullName}
-              onChangeText={setFullName}
-            />
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <View style={styles.tabContainer}>
+              <TouchableOpacity 
+                style={styles.tab}
+                onPress={() => navigation.navigate('Auth')}
+              >
+                <Text style={styles.tabText}>Login</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.activeTab}>
+                <Text style={styles.activeTabText}>Sign Up</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.title}>Welcome!</Text>
+            <Text style={styles.subtitle}>Create your account</Text>
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Phone Number</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your Phone Number"
-              placeholderTextColor="#A0A0A0"
-              keyboardType="phone-pad"
-              value={phoneNumber}
-              onChangeText={setPhoneNumber}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Create Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your Password"
-              placeholderTextColor="#A0A0A0"
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-            />
-          </View>
-
-          <Text style={styles.orText}>or continue with</Text>
-
-          <View style={styles.socialButtons}>
-            <TouchableOpacity 
-              style={styles.socialButton}
-              onPress={() => console.log('Google sign up pressed')}
-            >
-              <Image
-                source={require('../assets/Screenshot 2025-02-05 171151.png')} 
-                style={styles.socialIcon}
+          <View style={styles.form}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Full Name</Text>
+              <TextInput
+                style={[styles.input, errors.fullName ? styles.inputError : null]}
+                placeholder="Enter your Full Name"
+                placeholderTextColor="#A0A0A0"
+                value={fullName}
+                onChangeText={setFullName}
               />
+              {errors.fullName ? <Text style={styles.errorText}>{errors.fullName}</Text> : null}
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Phone Number</Text>
+              <TextInput
+                style={[styles.input, errors.phoneNumber ? styles.inputError : null]}
+                placeholder="Enter your Phone Number"
+                placeholderTextColor="#A0A0A0"
+                keyboardType="phone-pad"
+                value={phoneNumber}
+                onChangeText={setPhoneNumber}
+              />
+              {errors.phoneNumber ? <Text style={styles.errorText}>{errors.phoneNumber}</Text> : null}
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Create Password</Text>
+              <TextInput
+                style={[styles.input, errors.password ? styles.inputError : null]}
+                placeholder="Enter your Password"
+                placeholderTextColor="#A0A0A0"
+                secureTextEntry
+                value={password}
+                onChangeText={setPassword}
+              />
+              {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
+            </View>
+
+            <TouchableOpacity 
+              style={styles.loginButton}
+              onPress={handleSignUp}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator size="small" color="#FFF" />
+              ) : (
+                <Text style={styles.loginButtonText}>Sign Up</Text>
+              )}
             </TouchableOpacity>
-
-
           </View>
-
-          <TouchableOpacity 
-            style={styles.loginButton}
-            onPress={handleSignUp}
-          >
-            <Text style={styles.loginButtonText}>Sign Up</Text>
-          </TouchableOpacity>
         </View>
-      </View>
+      </ScrollView> 
     </SafeAreaView>
   );
 };
@@ -104,6 +150,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
+  },
+  scrollViewContent: {
+    flexGrow: 1,
   },
   content: {
     flex: 1,
@@ -166,40 +215,28 @@ const styles = StyleSheet.create({
     padding: 15,
     fontSize: 16,
   },
+  inputError: {
+    borderWidth: 1,
+    borderColor: '#FF3B30',
+  },
+  errorText: {
+    color: '#FF3B30',
+    fontSize: 12,
+    marginTop: 5,
+  },
   loginButton: {
     backgroundColor: '#FF9B6B',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
-    marginTop: 50,
+    marginTop: 30,
+    height: 56,
+    justifyContent: 'center',
   },
   loginButtonText: {
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
-  },
-  orText: {
-    textAlign: 'center',
-    color: '#666',
-    marginVertical: 20,
-    marginTop: 30,
-  },
-  socialButtons: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 20,
-  },
-  socialButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#F5F5F5',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  socialIcon: {
-    width: 24,
-    height: 24,
   },
 });
 

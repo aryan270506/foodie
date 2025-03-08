@@ -1,79 +1,147 @@
-// AuthScreen.js
-import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import React, { useState } from 'react';
+import { 
+  View, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  ScrollView, 
+  StyleSheet, 
+  SafeAreaView, 
+  KeyboardAvoidingView, 
+  Platform,
+  Alert
+} from 'react-native';
 import { Image } from 'react-native';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AuthScreen = ({ navigation }) => {
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  // Define credentials with associated hotel IDs
+  const credentials = {
+    '7499486867': { password: 'aryan123', role: 'admin', hotelId: 'Desi Tadka', name: 'Desi Tadka Admin' },
+    '9823835946': { password: 'aryan123', role: 'admin', hotelId: 'Brothers Cafe', name: 'Brothers Cafe Admin' },
+    '1111111111': { password: 'owner123', role: 'owner', name: 'Main Owner' },
+  };
+
+  const handleLogin = async () => {
+    // Reset error
+    setError('');
+
+    // Check if the phone number exists in our credentials
+    if (credentials[phoneNumber]) {
+      const userInfo = credentials[phoneNumber];
+      
+      // Check if password matches
+      if (password === userInfo.password) {
+        // Store user info in AsyncStorage
+        try {
+          await AsyncStorage.setItem('userInfo', JSON.stringify({
+            phoneNumber,
+            role: userInfo.role,
+            hotelId: userInfo.hotelId || null,
+            name: userInfo.name
+          }));
+          
+          // Navigate based on role
+          if (userInfo.role === 'admin') {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'AdminPanel' }],
+            });
+          } else if (userInfo.role === 'owner') {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'OwnerDashboard' }],
+            });
+          }
+        } catch (error) {
+          console.error('Error storing user info', error);
+          setError('Login failed. Please try again.');
+        }
+      } else {
+        setError('Invalid password');
+        Alert.alert('Error', 'Invalid password');
+      }
+    } else if (phoneNumber.length > 0 && password.length > 0) {
+      // For regular users, navigate to home screen
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'HomeScreen' }],
+      });
+    } else {
+      // Show error for empty fields
+      setError('Please enter phone number and password');
+      Alert.alert('Error', 'Please enter phone number and password');
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <View style={styles.tabContainer}>
-            <TouchableOpacity style={styles.activeTab}>
-              <Text style={styles.activeTabText}>Login</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.tab}
-              onPress={() => navigation.navigate('signup')}
-            >
-              <Text style={styles.tabText}>Sign Up</Text>
-            </TouchableOpacity>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
+          <View style={styles.content}>
+            <View style={styles.header}>
+              <View style={styles.tabContainer}>
+                <TouchableOpacity style={styles.activeTab}>
+                  <Text style={styles.activeTabText}>Login</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.tab}
+                  onPress={() => navigation.navigate('signup')}
+                >
+                  <Text style={styles.tabText}>Sign Up</Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.title}>Welcome!</Text>
+              <Text style={styles.subtitle}>Login to your account.</Text>
+            </View>
+
+            <View style={styles.form}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Phone Number</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your Phone Number"
+                  placeholderTextColor="#A0A0A0"
+                  keyboardType="number-pad"
+                  value={phoneNumber}
+                  onChangeText={setPhoneNumber}
+                  maxLength={10}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Password</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your Password"
+                  placeholderTextColor="#A0A0A0"
+                  secureTextEntry
+                  value={password}
+                  onChangeText={setPassword}
+                />
+                <TouchableOpacity style={styles.forgotPassword}>
+                  <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+                </TouchableOpacity>
+              </View>
+
+              {error ? <Text style={styles.errorText}>{error}</Text> : null}
+              
+              <Text style={styles.orText}>hungry? let's continue with these</Text>
+
+              <TouchableOpacity 
+                style={styles.loginButton}
+                onPress={handleLogin}
+              >
+                <Text style={styles.loginButtonText}>Login</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-          <Text style={styles.title}>Welcome!</Text>
-          <Text style={styles.subtitle}>Login to your account.</Text>
-        </View>
-
-        <View style={styles.form}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email Address</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your Email"
-              placeholderTextColor="#A0A0A0"
-              keyboardType="email-address"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your Password"
-              placeholderTextColor="#A0A0A0"
-              secureTextEntry
-            />
-            <TouchableOpacity style={styles.forgotPassword}>
-              <Text style={styles.forgotPasswordText}>Forgot password?</Text>
-            </TouchableOpacity>
-          </View>
-
-
-
-          <Text style={styles.orText}>hungry? let's continue with these</Text>
-
-          <View style={styles.socialButtons}>
-  <TouchableOpacity 
-    style={styles.socialButton}
-    onPress={() => {
-      // Handle Google sign in
-      console.log('Google sign in pressed');
-    }}
-  >
-    <Image
-      source={require('../assets/Screenshot 2025-02-05 171151.png')}
-      style={styles.socialIcon}
-    />
-  </TouchableOpacity>
-
-
-</View>
-
-          <TouchableOpacity style={styles.loginButton}>
-            <Text style={styles.loginButtonText}>Login</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -82,6 +150,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    paddingBottom: 40,
   },
   content: {
     flex: 1,
@@ -157,7 +229,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
-    marginTop: 150,
+    marginTop: 50,
   },
   loginButtonText: {
     color: '#FFF',
@@ -187,9 +259,11 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
   },
+  errorText: {
+    color: 'red',
+    textAlign: 'center',
+    marginTop: 10,
+  },
 });
 
 export default AuthScreen;
-
-
-
